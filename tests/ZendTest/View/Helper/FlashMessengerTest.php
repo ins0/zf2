@@ -40,6 +40,7 @@ class FlashMessengerTest extends TestCase
         $helper->setSessionManager($this->session);
         $helper->addMessage('foo');
         $helper->addMessage('bar');
+        $helper->addMessage('baz &');
         $helper->addInfoMessage('bar-info');
         $helper->addSuccessMessage('bar-success');
         $helper->addErrorMessage('bar-error');
@@ -117,7 +118,7 @@ class FlashMessengerTest extends TestCase
         $helper = $this->helper;
         $this->seedMessages();
 
-        $displayInfoAssertion = '<ul class="default"><li>foo</li><li>bar</li></ul>';
+        $displayInfoAssertion = '<ul class="default"><li>foo</li><li>bar</li><li>baz &amp;</li></ul>';
         $displayInfo = $helper()->render();
         $this->assertEquals($displayInfoAssertion, $displayInfo);
     }
@@ -149,7 +150,7 @@ class FlashMessengerTest extends TestCase
     {
         $this->seedMessages();
 
-        $displayInfoAssertion = '<div><p class="foo-baz foo-bar">foo</p><p class="foo-baz foo-bar">bar</p></div>';
+        $displayInfoAssertion = '<div><p class="foo-baz foo-bar">foo</p><p class="foo-baz foo-bar">bar</p><p class="foo-baz foo-bar">baz &amp;</p></div>';
         $displayInfo = $this->helper
                 ->setMessageOpenFormat('<div><p%s>')
                 ->setMessageSeparatorString('</p><p%s>')
@@ -223,7 +224,7 @@ class FlashMessengerTest extends TestCase
         $sm->setService('ControllerPluginManager', $controllerPluginManager);
         $helper = $helperPluginManager->get('flashmessenger');
 
-        $displayInfoAssertion = '<div><ul><li class="foo-baz foo-bar">foo</li><li class="foo-baz foo-bar">bar</li></ul></div>';
+        $displayInfoAssertion = '<div><ul><li class="foo-baz foo-bar">foo</li><li class="foo-baz foo-bar">bar</li><li class="foo-baz foo-bar">baz &amp;</li></ul></div>';
         $displayInfo = $helper->render(PluginFlashMessenger::NAMESPACE_DEFAULT, array('foo-baz', 'foo-bar'));
         $this->assertEquals($displayInfoAssertion, $displayInfo);
     }
@@ -243,5 +244,23 @@ class FlashMessengerTest extends TestCase
         $displayAssertion = '<ul class="info"><li>translated message</li></ul>';
         $display = $this->helper->render(PluginFlashMessenger::NAMESPACE_INFO);
         $this->assertEquals($displayAssertion, $display);
+    }
+
+    public function testAutoEscapeIsHonored()
+    {
+        $helper = $this->helper;
+        $this->seedMessages();
+
+        $displayInfoAssertion = '<ul class="default"><li>foo</li><li>bar</li><li>baz &amp;</li></ul>';
+        $displayInfo = $helper()->render();
+        $this->assertEquals($displayInfoAssertion, $displayInfo);
+        $this->assertTrue($this->helper->getAutoEscape());
+
+        $this->helper->setAutoEscape(false);
+        $this->assertFalse($this->helper->getAutoEscape());
+
+        $displayInfoAssertion = '<ul class="default"><li>foo</li><li>bar</li><li>baz &</li></ul>';
+        $displayInfo = $helper()->render();
+        $this->assertEquals($displayInfoAssertion, $displayInfo);
     }
 }
