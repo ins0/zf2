@@ -64,6 +64,13 @@ class FlashMessenger extends AbstractTranslatorHelper implements ServiceLocatorA
     protected $serviceLocator;
 
     /**
+     * Flag whether to automatically escape output
+     *
+     * @var bool
+     */
+    protected $autoEscape = true;
+
+    /**
      * Returns the flash messenger plugin controller
      *
      * @param  string|null $namespace
@@ -115,20 +122,21 @@ class FlashMessenger extends AbstractTranslatorHelper implements ServiceLocatorA
         }
 
         // Flatten message array
-        $escapeHtml      = $this->getEscapeHtmlHelper();
-        $messagesToPrint = array();
+        $escapeHtml         = $this->getEscapeHtmlHelper();
+        $autoEscape         = $this->getAutoEscape();
+        $messagesToPrint    = array();
 
         $translator = $this->getTranslator();
         $translatorTextDomain = $this->getTranslatorTextDomain();
 
-        array_walk_recursive($messages, function ($item) use (&$messagesToPrint, $escapeHtml, $translator, $translatorTextDomain) {
+        array_walk_recursive($messages, function ($item) use (&$messagesToPrint, $escapeHtml, $translator, $translatorTextDomain, $autoEscape) {
             if ($translator !== null) {
                 $item = $translator->translate(
                     $item,
                     $translatorTextDomain
                 );
             }
-            $messagesToPrint[] = $escapeHtml($item);
+            $messagesToPrint[] = ($autoEscape) ? $escapeHtml($item) : $item;
         });
 
         if (empty($messagesToPrint)) {
@@ -277,5 +285,27 @@ class FlashMessenger extends AbstractTranslatorHelper implements ServiceLocatorA
         }
 
         return $this->escapeHtmlHelper;
+    }
+
+    /**
+     * Set whether or not auto escaping should be used
+     *
+     * @param  bool $autoEscape whether or not to auto escape output
+     * @return AbstractHelper
+     */
+    public function setAutoEscape($autoEscape = true)
+    {
+        $this->autoEscape = ($autoEscape) ? true : false;
+        return $this;
+    }
+
+    /**
+     * Return whether autoEscaping is enabled or disabled
+     *
+     * return bool
+     */
+    public function getAutoEscape()
+    {
+        return $this->autoEscape;
     }
 }
